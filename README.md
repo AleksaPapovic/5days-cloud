@@ -22,6 +22,7 @@ naći lokaciju gde se nalazi SPRING CLOUD SUIT.exe
 otvoriti terminal u folderu exchang-front/exchange-angular
 npm install
 npm start
+prikaz u pretraživaču je dostupan na linku localhost:4200
 
 #serverski(backend) deo
 otvoriti SPRING CLOUD SUIT
