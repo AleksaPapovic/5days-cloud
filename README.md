@@ -1,3 +1,6 @@
+FRONT SAM DODAO U OKVIRU DRUGOG REPO-a link do njega je 
+https://github.com/AleksaPapovic/5days-cloud-angular
+
 # 5days-cloud
 • nephodne stvari da se uradi build
 
