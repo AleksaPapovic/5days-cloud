@@ -23,11 +23,13 @@ naći lokaciju gde se nalazi SPRING CLOUD SUIT.exe
 
 #klijentski(frontend) interfejs pokretanje
 otvoriti terminal u folderu exchang-front/exchange-angular
+git clone https://github.com/AleksaPapovic/5days-cloud-angular
 npm install
 npm start
 prikaz u pretraživaču je dostupan na linku localhost:4200
 
 #serverski(backend) deo
+git clone https://github.com/AleksaPapovic/5days-cloud
 otvoriti SPRING CLOUD SUIT
 ispratiti korake iz build dela
 desni klik na ExchangeApplication pa RUN AS->Java Application
