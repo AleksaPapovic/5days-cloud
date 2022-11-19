@@ -59,7 +59,7 @@ public class OrderServiceImpl implements OrderService {
 		if (orderRequestDTO.getType().equals(OrderType.SELL)) {
 			orderDTO = tradeSellOrder(orderDTO);
 		}
-		
+
 		Order newOrder = new Order();
 		BeanUtils.copyProperties(orderDTO, newOrder);
 		orderRepository.save(newOrder);
@@ -75,15 +75,31 @@ public class OrderServiceImpl implements OrderService {
 
 		for (Order order : sellOrders) {
 			if (orderDTO.getOrderStatus() != OrderStatus.CLOSE) {
-				if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity())).compareTo(
-						orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) > 0) {
-					BigDecimal tradeAmount =(order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity())).subtract(
-							orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()) ) )).divide(order.getPrice());
-					tradeAmount= order.getQuantity().subtract(tradeAmount);
-					orderDTO.setFilledQuantity(tradeAmount);
+				if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))
+						.compareTo(orderDTO.getPrice()
+								.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) > 0) {
+					BigDecimal tradeAmount = (order.getPrice()
+							.multiply(order.getQuantity().subtract(order.getFilledQuantity()))
+							.subtract(orderDTO.getPrice()
+									.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))))
+							.divide(order.getPrice());
+					BigDecimal newAmount = (order.getPrice()
+							.multiply(order.getQuantity().subtract(order.getFilledQuantity()))
+							.subtract(orderDTO.getPrice()
+									.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))))
+							.divide(orderDTO.getPrice());
+					tradeAmount = order.getQuantity().subtract(tradeAmount);
+					newAmount = orderDTO.getQuantity().subtract(newAmount);
+					orderDTO.setFilledQuantity(newAmount);
 					orderDTO.setOrderStatus(OrderStatus.CLOSE);
+
+					Order newOrder = new Order();
+					BeanUtils.copyProperties(orderDTO, newOrder);
+					newOrder = orderRepository.save(newOrder);
+					BeanUtils.copyProperties(newOrder, orderDTO);
+
 					orderDTO.getTrades()
-							.add(new Trade(orderDTO.getId(), order.getId(), orderDTO.getPrice(), tradeAmount));
+							.add(new Trade(orderDTO.getId(), order.getId(), orderDTO.getPrice(), newAmount));
 					orderDTO.setTrades(orderDTO.getTrades());
 
 					order.setFilledQuantity(tradeAmount);
@@ -92,34 +108,60 @@ public class OrderServiceImpl implements OrderService {
 
 					orderRepository.save(order);
 
-				} else if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity())).compareTo(
-						orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) == 0)  {
-					BigDecimal tradeAmount =(orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
-							order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()) ) )).divide(order.getPrice());
+				} else if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))
+						.compareTo(orderDTO.getPrice()
+								.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) == 0) {
+					BigDecimal tradeAmount = (orderDTO.getPrice()
+							.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
+									order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))))
+							.divide(order.getPrice());
+					BigDecimal newAmount = (orderDTO.getPrice()
+							.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
+									order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))))
+							.divide(orderDTO.getPrice());
 					orderDTO.setFilledQuantity(orderDTO.getQuantity());
 					orderDTO.setOrderStatus(OrderStatus.CLOSE);
+
+					Order newOrder = new Order();
+					BeanUtils.copyProperties(orderDTO, newOrder);
+					newOrder = orderRepository.save(newOrder);
+					BeanUtils.copyProperties(newOrder, orderDTO);
+
 					orderDTO.getTrades()
-							.add(new Trade(orderDTO.getId(), order.getId(), orderDTO.getPrice(), tradeAmount));
+							.add(new Trade(orderDTO.getId(), order.getId(), orderDTO.getPrice(), newAmount));
 					orderDTO.setTrades(orderDTO.getTrades());
 
 					order.setFilledQuantity(order.getQuantity());
 					order.setOrderStatus(OrderStatus.CLOSE);
 					order.getTrades().add(new Trade(orderDTO.getId(), order.getId(), order.getPrice(), tradeAmount));
 					order.setTrades(order.getTrades());
-					
-					orderRepository.save(order);
-					
-				} else if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity())).compareTo(
-						orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) < 0)  {
 
-					BigDecimal tradeAmount =(orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
-							order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()) ) )).divide(order.getPrice());
-					orderDTO.setQuantity(tradeAmount);
+					orderRepository.save(order);
+
+				} else if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))
+						.compareTo(orderDTO.getPrice()
+								.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) < 0) {
+
+					BigDecimal tradeAmount = (orderDTO.getPrice()
+							.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
+									order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))))
+							.divide(order.getPrice());
+					BigDecimal newAmount = (orderDTO.getPrice()
+							.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
+									order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))))
+							.divide(order.getPrice());
+
+					Order newOrder = new Order();
+					BeanUtils.copyProperties(orderDTO, newOrder);
+					newOrder = orderRepository.save(newOrder);
+					BeanUtils.copyProperties(newOrder, orderDTO);
+
+					orderDTO.setQuantity(newAmount);
 					orderDTO.getTrades()
-							.add(new Trade(orderDTO.getId(), order.getId(), orderDTO.getPrice(), tradeAmount));
+							.add(new Trade(orderDTO.getId(), order.getId(), orderDTO.getPrice(), newAmount));
 					orderDTO.setTrades(orderDTO.getTrades());
 
-					order.setFilledQuantity(order.getFilledQuantity().add(tradeAmount));
+					order.setFilledQuantity(order.getQuantity());
 					order.setOrderStatus(OrderStatus.CLOSE);
 					order.getTrades().add(new Trade(orderDTO.getId(), order.getId(), order.getPrice(), tradeAmount));
 					order.setTrades(order.getTrades());
@@ -138,14 +180,29 @@ public class OrderServiceImpl implements OrderService {
 
 		for (Order order : buyOrders) {
 			if (orderDTO.getOrderStatus() != OrderStatus.CLOSE) {
-				if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity())).compareTo(
-						orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) > 0) {
-					BigDecimal tradeAmount =(order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity())).subtract(
-							orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()) ) )).divide(order.getPrice());
-					
-					tradeAmount= order.getQuantity().subtract(tradeAmount);
-					orderDTO.setFilledQuantity(tradeAmount);
+				if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))
+						.compareTo(orderDTO.getPrice()
+								.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) > 0) {
+					BigDecimal tradeAmount = (order.getPrice()
+							.multiply(order.getQuantity().subtract(order.getFilledQuantity()))
+							.subtract(orderDTO.getPrice()
+									.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))))
+							.divide(order.getPrice());
+					BigDecimal newAmount = (order.getPrice()
+							.multiply(order.getQuantity().subtract(order.getFilledQuantity()))
+							.subtract(orderDTO.getPrice()
+									.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))))
+							.divide(orderDTO.getPrice());
+					tradeAmount = order.getQuantity().subtract(tradeAmount);
+					newAmount = orderDTO.getQuantity().subtract(newAmount);
+					orderDTO.setFilledQuantity(newAmount);
 					orderDTO.setOrderStatus(OrderStatus.CLOSE);
+
+					Order newOrder = new Order();
+					BeanUtils.copyProperties(orderDTO, newOrder);
+					newOrder = orderRepository.save(newOrder);
+					BeanUtils.copyProperties(newOrder, orderDTO);
+
 					orderDTO.getTrades()
 							.add(new Trade(orderDTO.getId(), order.getId(), orderDTO.getPrice(), tradeAmount));
 					orderDTO.setTrades(orderDTO.getTrades());
@@ -156,33 +213,56 @@ public class OrderServiceImpl implements OrderService {
 
 					orderRepository.save(order);
 
-				} else if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity())).compareTo(
-						orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) == 0)  {
-					BigDecimal tradeAmount =(orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
-							order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()) ) )).divide(order.getPrice());
+				} else if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))
+						.compareTo(orderDTO.getPrice()
+								.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) == 0) {
+					BigDecimal tradeAmount = (orderDTO.getPrice()
+							.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
+									order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))))
+							.divide(order.getPrice());
+					BigDecimal newAmount = (orderDTO.getPrice()
+							.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
+									order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))))
+							.divide(orderDTO.getPrice());
 					orderDTO.setFilledQuantity(orderDTO.getQuantity());
 					orderDTO.setOrderStatus(OrderStatus.CLOSE);
+
+					Order newOrder = new Order();
+					BeanUtils.copyProperties(orderDTO, newOrder);
+					newOrder = orderRepository.save(newOrder);
+					BeanUtils.copyProperties(newOrder, orderDTO);
+
 					orderDTO.getTrades()
-							.add(new Trade(orderDTO.getId(), order.getId(), orderDTO.getPrice(), tradeAmount));
+							.add(new Trade(orderDTO.getId(), order.getId(), orderDTO.getPrice(), newAmount));
 					orderDTO.setTrades(orderDTO.getTrades());
 
 					order.setFilledQuantity(order.getQuantity());
 					order.setOrderStatus(OrderStatus.CLOSE);
 					order.getTrades().add(new Trade(orderDTO.getId(), order.getId(), order.getPrice(), tradeAmount));
 					order.setTrades(order.getTrades());
-					
+
 					orderRepository.save(order);
+
+				} else if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))
+						.compareTo(orderDTO.getPrice()
+								.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) < 0) {
+
+					BigDecimal tradeAmount = (orderDTO.getPrice()
+							.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
+									order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))))
+							.divide(order.getPrice());
+					BigDecimal newAmount =  (orderDTO.getPrice()
+							.multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
+									order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()))))
+							.divide(orderDTO.getPrice());
+					orderDTO.setQuantity(newAmount);
 					
-				} else if (order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity())).compareTo(
-						orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity()))) < 0)  {
 
-					BigDecimal tradeAmount =(orderDTO.getPrice().multiply(orderDTO.getQuantity().subtract(orderDTO.getFilledQuantity())).subtract(
-							order.getPrice().multiply(order.getQuantity().subtract(order.getFilledQuantity()) ) )).divide(order.getPrice());
-					orderDTO.setQuantity(tradeAmount);
-					orderDTO.getTrades()
-							.add(new Trade(orderDTO.getId(), order.getId(), orderDTO.getPrice(), tradeAmount));
-					orderDTO.setTrades(orderDTO.getTrades());
-
+					Order newOrder = new Order();
+					BeanUtils.copyProperties(orderDTO, newOrder);
+					newOrder = orderRepository.save(newOrder);
+					BeanUtils.copyProperties(newOrder, orderDTO);
+					
 					order.setFilledQuantity(order.getQuantity());
 					order.getTrades().add(new Trade(orderDTO.getId(), order.getId(), order.getPrice(), tradeAmount));
 					order.setTrades(order.getTrades());
